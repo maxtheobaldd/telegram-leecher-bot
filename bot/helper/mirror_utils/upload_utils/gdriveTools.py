@@ -34,7 +34,7 @@ logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 if USE_SERVICE_ACCOUNTS:
     SERVICE_ACCOUNT_INDEX = randrange(len(os.listdir("accounts")))
 
-TELEGRAPHLIMIT = 70
+TELEGRAPHLIMIT = 60
 
 
 class GoogleDriveHelper:
@@ -118,20 +118,6 @@ class GoogleDriveHelper:
             self.uploaded_bytes += chunk_size
             self.total_time += self.update_interval
 
-    def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
-        media_body = MediaFileUpload(path,
-                                     mimetype=mime_type,
-                                     resumable=False)
-        file_metadata = {
-            'name': file_name,
-            'description': 'Uploaded using Mirrorbot',
-            'mimeType': mime_type,
-        }
-        if parent_id is not None:
-            file_metadata['parents'] = [parent_id]
-        return self.__service.files().create(supportsTeamDrives=True,
-                                             body=file_metadata, media_body=media_body).execute()
-
     def deletefile(self, link: str):
         try:
             file_id = self.getIdFromUrl(link)
@@ -179,7 +165,7 @@ class GoogleDriveHelper:
         # File body description
         file_metadata = {
             'name': file_name,
-            'description': 'Uploaded by Mirrorbot',
+            'description': 'Uploaded by Mirror-leech-telegram-bot',
             'mimeType': mime_type,
         }
         try:
@@ -390,8 +376,8 @@ class GoogleDriveHelper:
                     msg = self.deletefile(durl)
                     LOGGER.info(f"{msg}")
                     return "your clone has been stopped and cloned data has been deleted!", "cancelled"
-                msg += f'<b>Name: </b><code>{meta.get("name")}</code>\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
-                msg += '\n<b>Type: </b>Folder'
+                msg += f'<code>{meta.get("name")}</code>\n\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
+                msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{self.total_folders}'
                 msg += f'\n<b>Files: </b>{self.total_files}'
                 buttons = button_build.ButtonMaker()
@@ -410,7 +396,7 @@ class GoogleDriveHelper:
                         buttons.buildbutton("⚡ Index Link", url)
             else:
                 file = self.copyFile(meta.get('id'), parent_id)
-                msg += f'<b>Name: </b><code>{file.get("name")}</code>'
+                msg += f'<code>{file.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 buttons = button_build.ButtonMaker()
                 if SHORTENER is not None and SHORTENER_API is not None:
@@ -423,8 +409,8 @@ class GoogleDriveHelper:
                 except:
                     typ = 'File'
                 try:
-                    msg += f'\n<b>Size: </b>{get_readable_file_size(int(meta.get("size")))}'
-                    msg += f'\n<b>Type: </b>{typ}'
+                    msg += f'\n\n<b>Size: </b>{get_readable_file_size(int(meta.get("size")))}'
+                    msg += f'\n\n<b>Type: </b>{typ}'
                 except TypeError:
                     pass
                 if INDEX_URL is not None:
@@ -494,6 +480,7 @@ class GoogleDriveHelper:
     def create_directory(self, directory_name, parent_id):
         file_metadata = {
             "name": directory_name,
+            "description": "Uploaded by Mirror-leech-telegram-bot",
             "mimeType": self.__G_DRIVE_DIR_MIME_TYPE
         }
         if parent_id is not None:
@@ -590,8 +577,8 @@ class GoogleDriveHelper:
                     content += f'<b> | <a href="https://telegra.ph/{self.path[nxt_page]}">Next</a></b>'
                     nxt_page += 1
             Telegraph(access_token=telegraph_token).edit_page(path = self.path[prev_page],
-                                 title = 'Mirrorbot Search',
-                                 author_name='Mirrorbot',
+                                 title = 'Mirror-leech-bot Search',
+                                 author_name='Mirror-leech-bot',
                                  author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                  html_content=content)
         return
@@ -787,8 +774,8 @@ class GoogleDriveHelper:
 
         for content in self.telegraph_content :
             self.path.append(Telegraph(access_token=telegraph_token).create_page(
-                                                    title = 'Mirrorbot Search',
-                                                    author_name='Mirrorbot',
+                                                    title = 'Mirror-leech-bot Search',
+                                                    author_name='Mirror-leech-bot',
                                                     author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                                     html_content=content
                                                     )['path'])
@@ -818,13 +805,13 @@ class GoogleDriveHelper:
             LOGGER.info(f"Counting: {name}")
             if drive_file['mimeType'] == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.gDrive_directory(**drive_file)
-                msg += f'<b>Name: </b><code>{name}</code>'
+                msg += f'<code>{name}</code>'
                 msg += f'\n\n<b>Size: </b>{get_readable_file_size(self.total_bytes)}'
                 msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{self.total_folders}'
                 msg += f'\n<b>Files: </b>{self.total_files}'
             else:
-                msg += f'<b>Name: </b><code>{name}</code>'
+                msg += f'<code>{name}</code>'
                 try:
                     typee = drive_file['mimeType']
                 except:
